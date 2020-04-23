@@ -1,0 +1,4 @@
+git+https://zpriddy@bitbucket.org/zpriddy/defang.git#egg=defang
+-e .
+
+flask-restx

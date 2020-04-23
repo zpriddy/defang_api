@@ -1,0 +1,16 @@
+graft src/defang_api
+graft tests
+graft src/__init__.py
+
+include README.md
+include LICENSE.md
+include requirements.txt
+
+include Dockerfile
+
+include pyproject.toml setup.cfg
+include tox.ini
+include docker-compose*.yaml
+
+recursive-exclude * __pycache__ *.py[cod]
+recursive-include src *.py
