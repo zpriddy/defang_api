@@ -9,7 +9,7 @@ werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import Flask, request, make_response
 from defang import refang
 from flask_restx import Api, fields
-
+from urllib.parse import unquote
 import click
 
 from .helpers.helpers import (
@@ -151,7 +151,7 @@ class Base64encode(ResponseObject):
     def get(self):
         """Encode data with base 64"""
         self.get_args(self.parser)
-        self.data = request.query_string.decode()[5:].encode()
+        self.data = unquote(request.query_string.decode()[5:]).encode()
         return b64_encode(self)
 
     @ds.expect(json_parser)
@@ -178,7 +178,7 @@ class Base64decode(ResponseObject):
     def get(self):
         """Decode base 64 encoded data"""
         self.get_args(self.parser)
-        self.data = request.query_string.decode()[5:]
+        self.data = unquote(request.query_string.decode()[5:])
         return b64_decode(self)
 
     @ds.expect(json_parser)

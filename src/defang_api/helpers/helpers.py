@@ -1,7 +1,7 @@
 from defang import defang, refang
 from flask_restx import Resource
 from flask_restx.reqparse import RequestParser
-
+from urllib.parse import unquote
 
 class ResponseObject(Resource):
     def __init__(self, *args, **kwargs):
@@ -63,7 +63,7 @@ def defang_post_json(payload: ResponseObject):
 
 
 def defang_get(payload: ResponseObject):
-    payload.output = defang(payload.args["url"])
+    payload.output = defang(unquote(payload.args["url"]))
     return payload.response
 
 
