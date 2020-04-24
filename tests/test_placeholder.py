@@ -1,5 +1,10 @@
-from src.defang_api.servelocal import DefangPostResource, RefangPostResource, ResponseObject, defang_post_json, defang_get
-
+# from src.defang_api.servelocal import DefangPostResource, RefangPostResource, ResponseObject, defang_post_json, defang_get
+from src.defang_api.helpers.helpers import (
+    ResponseObject,
+    defang_post_json,
+    defang_get,
+    refang_post_json,
+)
 
 DEFANGED = "defanged"
 DEFANGED_COLON = "colon"
@@ -19,12 +24,6 @@ TEST_CASES = {
         DEFANGED_DOTS: "hXXp://example[.]org",
         DEFANGED_COLON: "hXXp[:]//example[.]org",
         DEFANGED_DOTS_COLON: "hXXp[:]//example[.]org",
-    },
-    "example.org\nbadguy.example.org\n": {
-        DEFANGED: "example[.]org\nbadguy.example[.]org\n",
-        DEFANGED_DOTS: "example[.]org\nbadguy[.]example[.]org\n",
-        DEFANGED_COLON: "example[.]org\nbadguy.example[.]org\n",
-        DEFANGED_DOTS_COLON: "example[.]org\nbadguy[.]example[.]org\n",
     },
     "http://1.22.33.111/path": {
         DEFANGED: "hXXp://1[.]22.33.111/path",
@@ -150,25 +149,67 @@ class MockResponseObject(ResponseObject):
         return {"output": self.output, "error": self.errors}
 
 
-
-# @pytest.fixture
-# def MockResponseObject():
-#     ro = DefangPostResource()
-#     #ro.response = response = {"output": ro.output, "error": ro.errors}
-#     return ro
-
-def test_placeholder():
-    assert 1 == 1
-
-def mock_get_args(parser):
-    return True
-
 def test_defang(monkeypatch):
-    defang_resouce = MockResponseObject()
-    #monkeypatch.setattr(defang_resouce, "response", defang_resouce.mockresponse)
-    defang_resouce.args = {"url": "http://foo.bar", "dots": False, "colons": False}
-    assert defang_post_json(defang_resouce) == {'error': [], 'output': 'hXXp://foo[.]bar'}
-    assert defang_get(defang_resouce) == {
-        'error': [],
-        'output': 'hXXp://foo[.]bar'
-    }
+    for fqdn, cases in TEST_CASES.items():
+        defang_resouce = MockResponseObject()
+        defang_resouce.args = {"url": fqdn, "dots": False, "colons": False}
+        assert defang_post_json(defang_resouce) == {
+            "error": [],
+            "output": cases[DEFANGED],
+        }
+        assert defang_get(defang_resouce) == {
+            "error": [],
+            "output": cases[DEFANGED],
+        }
+
+
+def test_defang_dots(monkeypatch):
+    for fqdn, cases in TEST_CASES.items():
+        defang_resouce = MockResponseObject()
+        defang_resouce.args = {"url": fqdn, "dots": True, "colons": False}
+        assert defang_post_json(defang_resouce) == {
+            "error": [],
+            "output": cases[DEFANGED_DOTS],
+        }
+        assert defang_get(defang_resouce) == {
+            "error": [],
+            "output": cases[DEFANGED],
+        }
+
+
+def test_defang_colons(monkeypatch):
+    for fqdn, cases in TEST_CASES.items():
+        defang_resouce = MockResponseObject()
+        defang_resouce.args = {"url": fqdn, "dots": False, "colons": True}
+        assert defang_post_json(defang_resouce) == {
+            "error": [],
+            "output": cases[DEFANGED_COLON],
+        }
+        assert defang_get(defang_resouce) == {
+            "error": [],
+            "output": cases[DEFANGED],
+        }
+
+
+def test_defang_dots_colons(monkeypatch):
+    for fqdn, cases in TEST_CASES.items():
+        defang_resouce = MockResponseObject()
+        defang_resouce.args = {"url": fqdn, "dots": True, "colons": True}
+        assert defang_post_json(defang_resouce) == {
+            "error": [],
+            "output": cases[DEFANGED_DOTS_COLON],
+        }
+        assert defang_get(defang_resouce) == {
+            "error": [],
+            "output": cases[DEFANGED],
+        }
+
+
+def test_refang(monkeypatch):
+    for fqdn, cases in TEST_CASES.items():
+        for _, defanged in cases.items():
+            defang_resouce = MockResponseObject()
+            defang_resouce.args = {"url": defanged}
+            output = refang_post_json(defang_resouce)
+            output["output"] = output["output"].lower()
+            assert output == {"error": [], "output": fqdn.lower().strip()}
